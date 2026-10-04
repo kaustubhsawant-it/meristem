@@ -1,13 +1,13 @@
-# Connecting MCP clients to DLMS
+# Connecting MCP clients to Meristem
 
-The `dlms` MCP server is standard [Model Context Protocol](https://modelcontextprotocol.io),
+The `meristem` MCP server is standard [Model Context Protocol](https://modelcontextprotocol.io),
 so any MCP-capable agent can call its tools (`query_facts`, `assert_fact`,
 `supersede`, `graph_neighbors`, `embed_status`, `ping`).
 
-Prereq: `pip install 'dlms[mcp]'` (or `uv tool install 'dlms[mcp]'`) so `dlms mcp` runs.
+Prereq: `pip install 'meristem[mcp]'` (or `uv tool install 'meristem[mcp]'`) so `meristem mcp` runs.
 
 All the desktop/IDE clients below use the same `mcpServers` shape from
-[`stdio.mcp.json`](stdio.mcp.json) — set `cwd` to the repo whose `.dlms/` you
+[`stdio.mcp.json`](stdio.mcp.json) — set `cwd` to the repo whose `.meristem/` you
 want the agent to read. Only the file location differs:
 
 | Client | Config file |
@@ -27,7 +27,7 @@ For agents that connect over the network rather than spawning a subprocess,
 serve over a port:
 
 ```bash
-dlms mcp --transport http --host 127.0.0.1 --port 8765   # or --transport sse
+meristem mcp --transport http --host 127.0.0.1 --port 8765   # or --transport sse
 ```
 
 Then point the client's MCP server URL at `http://127.0.0.1:8765`.
@@ -37,5 +37,5 @@ Then point the client's MCP server URL at `http://127.0.0.1:8765`.
 Any MCP client gets the **tools** — it queries the graph and writes facts back
 by calling them explicitly. The **ambient** layer (auto SessionStart digest,
 per-turn context injection, PostToolUse liveness watcher, PreCompact handoff,
-Memory Pulse statusline, `/dlms:*` skills) is delivered through Claude Code
+Memory Pulse statusline, `/meristem:*` skills) is delivered through Claude Code
 hooks and is Claude-Code-specific for now.

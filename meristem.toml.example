@@ -1,0 +1,97 @@
+# meristem.toml — config for Meristem, a self-invalidating knowledge substrate
+# All fields optional. `meristem init` writes detected defaults.
+
+[workspace]
+name = "myproject"
+# Multi-repo workspaces: list each repo root. Submodules are auto-detected.
+roots = ["."]
+# Commit atoms back to git (recommended) — teammates `git pull` memory updates.
+shared = true
+
+[scan]
+# Default: language heuristics from manifests. Override here if needed.
+include = []
+exclude = ["node_modules", "dist", "build", ".venv", "target", ".dart_tool", "worktrees", ".worktrees"]
+max_file_kb = 512
+follow_symlinks = false
+
+[ingesters]
+# Adapters run in order. Comment out to skip.
+enabled = ["readme", "manifest", "schema", "git", "symbols", "modules"]
+
+# Per-adapter overrides
+[ingesters.schema]
+# Auto-detected if unset. Force here for ambiguous repos.
+# dialects = ["supabase", "prisma", "django", "sqlalchemy", "openapi"]
+
+[ingesters.symbols]
+# tree-sitter by default. Set lsp=true only if you need cross-file resolution
+# in dynamic languages (Python, Ruby, Dart). Costs setup time.
+lsp = false
+# Walk by recency (last 90 days of git activity), cap files.
+max_files = 50000
+
+[capture]
+# Terms that must never become a captured fact (SPEC §18), even when the
+# sentence around them reads as a durable rule — e.g. the names
+# of real people a project tracks. Case-insensitive, whole-word match.
+# Empty by default: only you know what is personal here.
+exclude_terms = []
+
+[guard]
+# Trust guard: secrets (keys, tokens, private keys, password= assignments,
+# high-entropy strings) and personal data (emails, phone numbers, plus the
+# exclude_terms above) are never proposed as facts and are withheld from the
+# shared export. `meristem doctor` (guard.store) reports atoms already holding
+# any. allow_patterns: regexes that whitelist a known-safe match.
+enabled = true
+allow_patterns = []
+
+[bootstrap]
+# Time budget for first-time `meristem ingest`. Use 300+ for large repos.
+budget_seconds = 60
+# Bootstrap context ceiling for SessionStart digest.
+token_ceiling = 4000
+
+[retrieval]
+# Per-turn injection budget for UserPromptSubmit hook.
+turn_token_cap = 3000
+# Local embedder. Hosted only justified if >10k queries/day.
+embedder = "bge-small-en-v1.5"
+# Relevance floor: minimum query↔atom cosine for an atom to be injected.
+# Nothing above the floor → Meristem injects nothing, which is the intended
+# behaviour. EMBEDDER- AND CORPUS-SPECIFIC: cosine scales differ per model and
+# per store. 0.70 is calibrated for bge-small-en-v1.5 against one populated
+# workspace (nonsense peaks ~0.67, real hits reach 0.83) — a starting point,
+# not a constant. Run `meristem calibrate` to re-derive it from your own prompts,
+# and `meristem calibrate --write` to store the result here. `meristem doctor` warns
+# when this floor stops fitting the workspace.
+min_relevance = 0.70
+# Cross-encoder rerank.
+reranker = "ms-marco-MiniLM-L6"
+
+[freshness]
+# `meristem sync` keeps the index level with the repo (SPEC §19). Install the
+# trigger with `meristem sync --install-hook` — a git post-commit hook that runs it
+# detached, so a commit never waits on indexing.
+# Minimum seconds between automatic syncs: one push of 30 commits fires
+# post-commit 30 times and should cost one incremental ingest, not thirty.
+debounce_seconds = 90
+# Embed after ingesting. An atom with no vector fails the relevance gate as
+# `unknown`, so leaving this off means new atoms are stored but unretrievable.
+embed_after_sync = true
+
+[sync]
+# How atoms are shared between teammates.
+mode = "git-jsonl"   # git-jsonl | sqlite-commit | off
+export_path = ".meristem/atoms.jsonl"
+
+[handoff]
+# Auto-generate handoff doc when context capacity exceeds threshold.
+capacity_warn_pct = 80
+capacity_halt_pct = 85
+keep_handoffs_days = 30
+
+[branches]
+# OODAR + main+tags discipline. Block direct edits on these branches.
+protected = ["main", "stable"]

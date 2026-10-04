@@ -1,7 +1,7 @@
 {
   "mcpServers": {
-    "dlms": {
-      "command": "dlms",
+    "meristem": {
+      "command": "meristem",
       "args": ["mcp"],
       "cwd": "/path/to/your-repo"
     }

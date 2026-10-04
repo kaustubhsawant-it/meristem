@@ -1,0 +1,37 @@
+site_name: Meristem
+site_description: A typed, self-invalidating memory layer for coding agents.
+docs_dir: docs
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+nav:
+  - Home: README.md
+  - Getting started:
+      - Install and setup: 11-install.md
+      - Team memory: 12-team-memory.md
+      - Trust: 13-trust.md
+  - Concepts:
+      - Overview: 01-overview.md
+      - Data model: 02-data-model.md
+      - The edge graph: 03-edge-graph.md
+      - Liveness: 04-liveness.md
+      - The ambient layer (hooks): 05-ambient-layer.md
+      - The write path: 06-write-path.md
+      - Multi-repo / sync protocol: 07-sync-protocol.md
+  - Reference:
+      - CLI + MCP surface: 08-cli-mcp.md
+      - Design principles: 09-design-principles.md
+      - Performance: 15-performance.md
+  - Positioning:
+      - Related work: 10-related-work.md
+      - Comparison: 14-comparison.md

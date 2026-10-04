@@ -1,100 +1,81 @@
-# Installing DLMS on a new machine
+# Installing Meristem 0.3.0
 
-DLMS = a `dlms` Python CLI (the engine) **+** a set of Claude Code skills
-(`/dlms:*`). You need both. This bundle contains everything except the Python
-dependencies, which install automatically from the internet.
+## Requirements
 
-## 0. Prerequisites
+- Python 3.11 or newer.
+- `git` (Meristem reads history and installs git hooks).
+- [uv](https://docs.astral.sh/uv/) (recommended), or pip.
+- Optional: the `mcp` extra for the MCP server, the `embed` extra for real
+  embeddings (pulls in torch, about 2 GB). Without `embed` a built-in hash
+  embedder is used; neither is needed to try Meristem.
 
-- **Python ≥ 3.11**
-- **git** (DLMS ingests git history)
-- **Claude Code** (the skills run inside it)
-- One of: [`uv`](https://docs.astral.sh/uv/) (recommended) or `pip`
+## Install the wheel
 
-## 1. Install the `dlms` CLI
+From this folder:
 
-From inside this unzipped folder:
+    uv tool install ./meristem-0.3.0-py3-none-any.whl
 
-```bash
-# Recommended — uv installs it as an isolated tool on your PATH:
-uv tool install .                 # add  ".[mcp,embed]"  for the MCP server + embeddings
+With the MCP server extra:
 
-# …or with pip:
-pip install .                     # add  ".[mcp,embed]"  for extras
-```
+    uv tool install "./meristem-0.3.0-py3-none-any.whl[mcp]"
 
-Verify:
+Or with pip (inside a virtual environment):
 
-```bash
-dlms --help        # should print the command list
-```
+    pip install ./meristem-0.3.0-py3-none-any.whl
+    pip install "./meristem-0.3.0-py3-none-any.whl[mcp]"
 
-> Optional extras:
-> - `[mcp]`   → the FastMCP server (`dlms mcp`) so Claude can call `query_facts`, `assert_fact`, …
-> - `[embed]` → sentence-transformers, for semantic embedding of atom summaries
+For real embeddings add the `embed` extra the same way, for example
+`[mcp,embed]` (large download).
 
-## 2. Install the Claude Code skills
+Check it: `meristem --version` prints `meristem 0.3.0`.
 
-Copy the eight skill folders into your Claude skills directory:
+## Wire it into your coding agents
 
-```bash
-mkdir -p ~/.claude/skills
-cp -R skills/dlms skills/dlms-* ~/.claude/skills/
-```
+    meristem setup --dry-run     # show what would change, write nothing
+    meristem setup               # show the plan, ask, apply
 
-Restart Claude Code (or start a new session). `/dlms`, `/dlms:plan`,
-`/dlms:patch`, `/dlms:check`, `/dlms:trace`, `/dlms:tweak`, `/dlms:handoff`,
-and `/dlms:resume` should now be available.
+`setup` detects Claude Code, Cursor, Windsurf, Codex and Gemini CLI. Claude Code,
+Cursor and Windsurf are configured; Codex and Gemini CLI get a snippet to paste.
+It is idempotent, never overwrites foreign config keys, and backs a file up once
+to `<file>.meristem-bak` before first changing it. Run it inside a repo.
 
-## 3. Initialise DLMS in a repo
+## Index a repo
 
-```bash
-cd /path/to/your-repo
-dlms init        # writes dlms.toml + creates .dlms/
-dlms ingest      # first scan of git history + code (~60s default budget)
-dlms embed       # optional — only if you installed the [embed] extra
-dlms status      # confirms atom count + last indexed SHA
-```
+    cd your-repo
+    meristem init --all          # init + ingest + embed
+    meristem doctor              # health check
 
-## 4. Wire the Claude Code hooks (recommended)
+## Team use
 
-Add to the repo's `.claude/settings.json` so Claude stays oriented automatically:
+Meristem can share memory through git. Clone a repo that already carries a shared
+export (`.meristem/atoms.jsonl`), then run `meristem init --all` in the clone:
+`init` imports the shared memory into your fresh store and reports the atom count.
+See `docs/12-team-memory.md`.
 
-```json
-{
-  "hooks": {
-    "SessionStart":     [{"hooks": [{"type": "command", "command": "dlms digest"}]}],
-    "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "dlms route \"$CLAUDE_USER_PROMPT\""}]}],
-    "PostToolUse":      [{"matcher": "Edit|Write|MultiEdit",
-                          "hooks": [{"type": "command", "command": "dlms watch \"$CLAUDE_TOOL_FILES\""}]}],
-    "PreCompact":       [{"hooks": [{"type": "command", "command": "dlms handoff --reason capacity_pre_compact"}]}]
-  },
-  "statusLine": "dlms statusline --compact"
-}
-```
+## Status line
 
-For the MCP server, see `examples/mcp/stdio.mcp.json` and `examples/mcp/README.md`.
+    meristem-statusline
 
-## What's in this bundle
+Prints the one-line memory pulse. To use it in Claude Code, run
+`meristem hooks install --statusline`.
 
-| Path | What |
-|---|---|
-| `src/dlms_cli/` | The full Python engine (atom store, PPR retrieval, ingesters, MCP server, hooks) |
-| `schema.sql` | SQLite schema for the atom graph |
-| `skills/` | All 8 Claude Code skills (the `/dlms:*` commands) |
-| `tests/` | Test suite — run `pytest` after a `[dev]` install to verify |
-| `examples/mcp/` | Example MCP server wiring |
-| `SPEC.md` | Full design: atom taxonomy, OODAR loop, liveness predicates |
-| `README.md` | Overview + rationale |
-| `dlms.toml.example` | Annotated config |
-| `LICENSE` | MIT |
+## What's new in 0.3.0
 
-**Not included:** Python dependencies (installed automatically by `uv`/`pip`),
-build caches, and any local `.dlms/` runtime state.
+- `meristem setup`: one command wires Meristem into Claude Code, Cursor, Windsurf,
+  Codex and Gemini CLI (with `--dry-run`).
+- Team onboarding: `meristem init` in a clone imports the shared memory.
+- Trust guard: a secret and personal-data scanner keeps such content out of capture
+  and export; new `guard.store` check in `meristem doctor`.
+- Faster review: agent suggestions shown beside each pending fact, and better
+  capture precision.
+- Fast `meristem-statusline` (about 75 ms) and a docs site (`mkdocs.yml`, `docs/`).
 
-## Verify the install (optional)
+## Uninstall
 
-```bash
-uv tool install ".[dev]"     # or: pip install ".[dev]"
-pytest                        # runs the bundled test suite
-```
+- Claude Code hooks: `meristem hooks uninstall`.
+- MCP entries: remove the `meristem` key under `mcpServers` in the files `setup`
+  reported (or restore the `.meristem-bak` copy).
+- Git hooks: delete the `post-commit`, `post-rewrite`, `post-merge` files in
+  `.git/hooks` that carry the Meristem marker.
+- Local state: delete `.meristem/` and `meristem.toml` in each repo.
+- The tool: `uv tool uninstall meristem` (or `pip uninstall meristem`).

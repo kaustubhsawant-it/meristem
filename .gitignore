@@ -1,30 +1,52 @@
-# DLMS local state — not shared
-.dlms/local.sqlite
-.dlms/local.sqlite-*
-.dlms/cache/
-.dlms/jobs.ndjson
-.dlms/handoffs/LATEST.md
-.dlms/embedding_ledger.json
-.dlms/pulse.json
-# SQLite WAL/SHM sidecars — transient, committing them corrupts the shared DB.
-# (The shared .dlms/atoms.sqlite IS meant to be committed; its sidecars are not.)
-.dlms/*.sqlite-wal
-.dlms/*.sqlite-shm
+# Local per-workspace state, never shared
+.meristem/
+.dlms/
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+*.local.toml
+cache/
+jobs.ndjson
+embedding_ledger.json
+pulse.json
+handoffs/
 
-# Per-dev overrides
-dlms.local.toml
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
 
-# Internal dev/design handoff artifacts — not part of the published tool
-/handoffs/
-
-# Python build/dev
+# Caches and build output
 __pycache__/
 *.pyc
+*.pyd
 .venv/
+venv/
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 *.egg-info/
 dist/
 build/
+*.whl
+site/
 
-# Node (in case any tools land in JS)
+# Paper build artefacts
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
+paper/*.synctex.gz
+
+# Node
 node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
