@@ -12,6 +12,11 @@ Drop into any repo. Claude Code learns the project's invariants, decisions, and
 connections — and stays oriented across sessions without re-reading the codebase
 or bloating context.
 
+**Paper:** [Meristem: A Self-Invalidating Memory Substrate for Coding
+Agents](paper/meristem-paper.pdf) (Kaustubh Sawant, preprint). It covers the
+design, the evaluation and, in its limitations section, what is not yet proven.
+Questions and feedback: parabkaustubh13@gmail.com or a GitHub issue.
+
 ## Why
 
 Coding agents forget. Every session starts cold, so they re-read files to rebuild
@@ -39,7 +44,9 @@ It is not a fork or derivative of the HippoRAG codebase.
 ## Quick start
 
 ```bash
-uvx meristem setup             # detect your coding agents and wire Meristem into them
+uv tool install "git+https://github.com/kaustubhsawant-it/meristem.git"
+meristem setup --dry-run       # preview which coding agents it would wire up; writes nothing
+meristem setup                 # detect your coding agents and wire Meristem into them
 cd your-repo
 meristem init --all            # writes meristem.toml, creates .meristem/, then ingests + embeds
 meristem status                # show atom count, last indexed SHA
@@ -52,8 +59,8 @@ Windsurf, and prints a paste-in snippet for Codex and Gemini CLI. Preview with
 backed up once to `<file>.meristem-bak`. Run it from a repo that already has a
 store (`meristem init` first) to also get the project-scoped files and the git
 hooks. Details, requirements and uninstall: [docs/11-install.md](docs/11-install.md).
-(`uvx` needs the package on an index you can reach; from a source checkout use
-`pip install -e .` and `meristem setup`.)
+(Meristem is not on PyPI yet, so `uvx meristem` will not work; install from the
+Git URL above, or from a source checkout with `pip install -e .`.)
 
 `meristem init --all` (short flag `-a`) is the one-shot setup — it chains
 `init` → `ingest` → `embed` so the substrate is ready immediately. Prefer the
